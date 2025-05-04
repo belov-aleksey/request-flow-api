@@ -57,7 +57,7 @@ def update_request(request_id):
     # Находим заявку
     request_to_update = next((r for r in requests_db if r['id'] == request_id), None)
     if not request_to_update:
-        return jsonify({"error": "Заявка не найдена"}), 404
+        return {"error": "Заявка не найдена"}, 404
     
     # Обновляем статус
     if 'status' in data:
