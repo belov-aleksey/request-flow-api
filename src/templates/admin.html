@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель администратора</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status-0 { background-color: #ffcccc; }
+        .status-1 { background-color: #ccffcc; }
+        select, button {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Панель администратора</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>ФИО</th>
+                <th>Комната</th>
+                <th>Сообщение</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr class="status-{{ req.status }}">
+                <td>{{ req.id }}</td>
+                <td>{{ req.student_info }}</td>
+                <td>{{ req.room }}</td>
+                <td>{{ req.request_text }}</td>
+                <td>
+                    <select class="status-select" data-id="{{ req.id }}">
+                        <option value="0" {% if req.status == 0 %}selected{% endif %}>Не выполнено</option>
+                        <option value="1" {% if req.status == 1 %}selected{% endif %}>Выполнено</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="save-btn" data-id="{{ req.id }}">Сохранить</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.querySelectorAll('.save-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const requestId = this.dataset.id;
+                const select = document.querySelector(`.status-select[data-id="${requestId}"]`);
+                const newStatus = parseInt(select.value);
+                
+                try {
+                    const response = await fetch(`/api/requests/${requestId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        alert('Статус обновлен!');
+                        // Обновляем строку в таблице
+                        const row = this.closest('tr');
+                        row.className = `status-${newStatus}`;
+                    } else {
+                        alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                    }
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка соединения с сервером');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

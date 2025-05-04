@@ -28,7 +28,7 @@ def handle_request():
     request_id = len(requests_db) + 1
     new_request = {
         'id': request_id,
-        'status': 'new',
+        'status': 0,
         **data
     }
     requests_db.append(new_request)
@@ -43,3 +43,24 @@ def handle_request():
 def get_requests():
     """Возвращает список всех заявок (для тестирования)"""
     return requests_db
+
+@app.route('/admin')
+def admin_panel():
+    """Страница администрирования заявок"""
+    return render_template('admin.html', requests=requests_db)
+
+@app.route('/api/requests/<int:request_id>', methods=['PUT'])
+def update_request(request_id):
+    """Обновление статуса заявки"""
+    data = request.get_json()
+    
+    # Находим заявку
+    request_to_update = next((r for r in requests_db if r['id'] == request_id), None)
+    if not request_to_update:
+        return jsonify({"error": "Заявка не найдена"}), 404
+    
+    # Обновляем статус
+    if 'status' in data:
+        request_to_update['status'] = data['status']
+    
+    return {"status": "success", "request": request_to_update}    
